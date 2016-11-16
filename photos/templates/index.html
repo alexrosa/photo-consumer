@@ -1,0 +1,48 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+<title>Waldo</title>
+</head>
+<body>
+	<div class="container">
+		<div class="section" style="text-align: center">
+			<h1>Waldo.photos</h1>
+			<h3>Engineer Test Solution:</h3>
+			<button type="button" onclick="javascript:load_data();">Load data</button>
+			<button type="button" onclick="javascript:clear();">Clear</button>
+			<div id="show_result">
+			</div>
+		</div>
+	</div>
+	<!--  Scripts-->
+	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script>
+	function load_data(){
+		var json_data = {'csrfmiddlewaretoken':'{{csrf_token}}'};
+    	$.ajax({
+        url : "load_and_save_data/", // the endpoint
+        type : "POST", // http method
+        contentType: 'application/json',
+        data :JSON.stringify(json_data), 
+        success : function(json) {
+        	$('#show_result').replaceWith(json)
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+        	$('#show_result').replaceWith("Error: "+xhr.status + ": " + xhr.responseText);
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });	
+}
+function clear(){
+	$('#show_result').replaceWith("");
+}
+</script>
+</body>
+
+</html>
