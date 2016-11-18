@@ -33,10 +33,11 @@ def index(request):
 @csrf_exempt
 def load_and_save_data(request):
     data = downloadRemoteFile(URL_XML_WALDO)
+    context = {}
     doc = parse(data)
     contents = doc.getElementsByTagName("Contents")
-    
-    response_data = []
+    total_count = 0
+    processed_photo = []
     for content in contents:
         key_name = content.getElementsByTagName("Key")[0]
         last_mod = content.getElementsByTagName("LastModified")[0]
@@ -44,23 +45,27 @@ def load_and_save_data(request):
         size = content.getElementsByTagName("Size")[0]
         #defines a url pattern for download data 
         url_photo = URL_XML_WALDO+'/'+key_name.firstChild.data
-        print(url_photo)
+        
+        #load photo before read
         photo = downloadRemoteFile(url_photo)
+        
         #get de EXIF data from pic
         exif_data = getExifData(photo)
+        
         #save data in a new python object
-        photo = Photo.objects.create(url_photo = url_photo, 
+        obj_photo = Photo.objects.create(url_photo = url_photo,
                                      key= key_name.firstChild.data,
                                      last_modified= last_mod.firstChild.data,
                                      etag = e_tag.firstChild.data,
                                      size = size.firstChild.data,
                                      storage_class = 'Standard',
                                      exif_keys = exif_data)
-        photo.save()
-        response_data.append('{{Key:'+key_name.firstChild.data+', last_mod:'+last_mod.firstChild.data+', ETag:'+e_tag.firstChild.data+', Size:'+size.firstChild.data+' exif:'+exif_data+'}, }')
+        obj_photo.save()
+        processed_photo.append('{url:'+url_photo+',name:'+key_name.firstChild.data+'}')
+        total_count = total_count + 1
+        print("processed file: "+str(total_count))
         
-        print("key:%s, last_mod:%s, e_tag:%s, size:%s" %
-              (key_name.firstChild.data, last_mod.firstChild.data, e_tag.firstChild.data, size.firstChild.data))
-        
-    return HttpResponse(json.dumps(response_data),content_type='application/json')
+    context = {'total_counted': total_count, 'photos':processed_photo}
+    return HttpResponse(json.dumps(context),content_type='application/json')
+    
 

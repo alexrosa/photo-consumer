@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 
 from django.db import models
-import jsonfield
+from jsonfield.fields import JSONField
 
 #models
-
 class Photo(models.Model):
     url_photo = models.CharField(max_length=600, blank=True)
     key = models.CharField(max_length=300)
@@ -12,8 +11,7 @@ class Photo(models.Model):
     etag= models.CharField(max_length=300)
     size = models.IntegerField()
     storage_class = models.CharField(max_length=100)
-    exif_keys = jsonfield.JSONField
-    
+    exif_keys = JSONField(default = {})
 
 
 
