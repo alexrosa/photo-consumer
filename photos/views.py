@@ -34,37 +34,40 @@ def index(request):
 def load_and_save_data(request):
     data = downloadRemoteFile(URL_XML_WALDO)
     context = {}
-    doc = parse(data)
-    contents = doc.getElementsByTagName("Contents")
-    total_count = 0
-    processed_photo = []
-    for content in contents:
-        key_name = content.getElementsByTagName("Key")[0]
-        last_mod = content.getElementsByTagName("LastModified")[0]
-        e_tag = content.getElementsByTagName("ETag")[0]
-        size = content.getElementsByTagName("Size")[0]
-        #defines a url pattern for download data 
-        url_photo = URL_XML_WALDO+'/'+key_name.firstChild.data
-        
-        #load photo before read
-        photo = downloadRemoteFile(url_photo)
-        
-        #get de EXIF data from pic
-        exif_data = getExifData(photo)
-        
-        #save data in a new python object
-        obj_photo = Photo.objects.create(url_photo = url_photo,
-                                     key= key_name.firstChild.data,
-                                     last_modified= last_mod.firstChild.data,
-                                     etag = e_tag.firstChild.data,
-                                     size = size.firstChild.data,
-                                     storage_class = 'Standard',
-                                     exif_keys = exif_data)
-        obj_photo.save()
-        processed_photo.append('{url:'+url_photo+',name:'+key_name.firstChild.data+'}')
-        total_count = total_count + 1
-        print("processed file: "+str(total_count))
-        
+    try:
+        doc = parse(data)
+        contents = doc.getElementsByTagName("Contents")
+        total_count = 0
+        processed_photo = []
+        for content in contents:
+            key_name = content.getElementsByTagName("Key")[0]
+            last_mod = content.getElementsByTagName("LastModified")[0]
+            e_tag = content.getElementsByTagName("ETag")[0]
+            size = content.getElementsByTagName("Size")[0]
+            #defines a url pattern for download data 
+            url_photo = URL_XML_WALDO+'/'+key_name.firstChild.data
+            
+            #load photo before read
+            photo = downloadRemoteFile(url_photo)
+            
+            #get de EXIF data from pic
+            exif_data = getExifData(photo)
+            
+            #save data in a new python object
+            obj_photo = Photo.objects.create(url_photo = url_photo,
+                                         key= key_name.firstChild.data,
+                                         last_modified= last_mod.firstChild.data,
+                                         etag = e_tag.firstChild.data,
+                                         size = size.firstChild.data,
+                                         storage_class = 'Standard',
+                                         exif_keys = exif_data)
+            obj_photo.save()
+            processed_photo.append('{url:'+url_photo+',name:'+key_name.firstChild.data+'}')
+            total_count = total_count + 1
+            print("processed file: "+str(total_count))
+    except Exception as e:
+        print("Application Error: "+e.message)
+        context= {'error':e.message}    
     context = {'total_counted': total_count, 'photos':processed_photo}
     return HttpResponse(json.dumps(context),content_type='application/json')
     
